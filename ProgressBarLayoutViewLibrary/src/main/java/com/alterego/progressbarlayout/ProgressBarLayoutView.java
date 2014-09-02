@@ -20,6 +20,7 @@ import android.view.animation.AnimationUtils;
 //TODO add custom fonts
 //TODO add custom step duration setting
 //TODO add javadocs
+//TODO add readme.MD
 
 public class ProgressBarLayoutView extends View {
 
