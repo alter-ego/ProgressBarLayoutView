@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="ProgressBarLayoutView">
+        <attr name="beginningProgressSize" format="dimension" />
+        <attr name="textProgressColor" format="color" />
+        <attr name="progressCircleColor" format="color" />
+        <attr name="textProgressSize" format="dimension" />
+        <attr name="textProgressString" format="string" />
+        <attr name="beginningProgressAnimation" format="reference" />
+        <attr name="beginningInverseProgressAnimation" format="reference" />
+        <attr name="beginningProgressAnimationDurationInMs" format="integer" />
+        <attr name="endingProgressAnimation" format="reference" />
+        <attr name="endingInverseProgressAnimation" format="reference" />
+        <attr name="endingProgressAnimationDurationInMs" format="integer" />
+    </declare-styleable>
+</resources>
