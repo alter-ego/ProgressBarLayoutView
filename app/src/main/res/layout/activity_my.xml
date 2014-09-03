@@ -15,6 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:gravity="center"
+        android:textSize="20sp"
         android:text="START" />
 
     <com.alterego.progressbarlayout.ProgressBarLayoutView
@@ -28,15 +29,16 @@
         alterego:textProgressString="%d%% done"
         alterego:beginningProgressSize="40dp"
         alterego:textProgressColor="@android:color/black"
-        alterego:progressCircleColor="#999999" />
+        alterego:progressCircleColor="#3087B4" />
 
     <TextView
         android:id="@+id/ending_tv"
         android:layout_centerInParent="true"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#666666"
+        android:background="#3087B4"
         android:gravity="center"
+        android:textSize="20sp"
         android:text="DONE!!!"
         android:visibility="gone" />
 
