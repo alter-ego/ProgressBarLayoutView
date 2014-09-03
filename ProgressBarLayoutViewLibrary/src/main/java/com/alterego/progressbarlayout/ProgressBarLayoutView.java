@@ -1,5 +1,21 @@
 package com.alterego.progressbarlayout;
 
+    /*Copyright 2014 Alter Ego SRLS
+
+        Licensed under the Apache License, Version 2.0 (the "License");
+        you may not use this file except in compliance with the License.
+        You may obtain a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+        Unless required by applicable law or agreed to in writing, software
+        distributed under the License is distributed on an "AS IS" BASIS,
+        WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+        See the License for the specific language governing permissions and
+        limitations under the License.
+
+    */
+
 import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
@@ -19,9 +35,6 @@ import android.view.animation.AnimationUtils;
 //TODO TEST add padding to calculations
 //TODO add custom fonts
 //TODO add custom step duration setting
-//TODO add javadocs
-//TODO add readme.MD
-//TODO add .aar packaging and push to maven repo
 
 public class ProgressBarLayoutView extends View {
 
@@ -208,9 +221,11 @@ public class ProgressBarLayoutView extends View {
         if (mTextProgressString != null) {
             try {
                 mCurrentProgressString = String.format(mTextProgressString, progress);
-                if (DEBUG_LOGGING) Log.v(TAG, "formatProgressString mCurrentProgressString = " + mCurrentProgressString);
+                if (DEBUG_LOGGING)
+                    Log.v(TAG, "formatProgressString mCurrentProgressString = " + mCurrentProgressString);
                 mTextToPrint = new StaticLayout(mCurrentProgressString, mTextPaint, Math.abs((mWidth - getPaddingLeft() - getPaddingRight())), mAlignmentHorizontal, mSpacingMult, mSpacingAdd, false);
-                if (DEBUG_LOGGING) Log.d(TAG, "formatProgressString height of static layout = " + mTextToPrint.getHeight() + ", width = " + mTextToPrint.getWidth());
+                if (DEBUG_LOGGING)
+                    Log.d(TAG, "formatProgressString height of static layout = " + mTextToPrint.getHeight() + ", width = " + mTextToPrint.getWidth());
             } catch (Exception e) {
                 Log.e(TAG, "formatProgressString formatting error = " + e.toString());
                 mCurrentProgressString = null;
@@ -236,7 +251,8 @@ public class ProgressBarLayoutView extends View {
         int half_diagonal = (int) Math.sqrt((double) mWidth * mWidth + mHeight * mHeight) / 2;
         mIncreaseStep = (half_diagonal - mBeginningProgressSize) / 100;
         mSleepTime = (int) (mIncreaseStep * 1500 / half_diagonal);
-        if (DEBUG_LOGGING) Log.i(TAG, "mIncreaseStep = " + mIncreaseStep + ", mSleepTime = " + mSleepTime);
+        if (DEBUG_LOGGING)
+            Log.i(TAG, "mIncreaseStep = " + mIncreaseStep + ", mSleepTime = " + mSleepTime);
     }
 
     /**
@@ -312,7 +328,8 @@ public class ProgressBarLayoutView extends View {
                 mUpdateTask.cancel(true);
             }
             if (progress > MAX_PROGRESS) {
-                if (DEBUG_LOGGING) Log.i(TAG, "setProgress progress bigger than MAX_PROGRESS = " + progress);
+                if (DEBUG_LOGGING)
+                    Log.i(TAG, "setProgress progress bigger than MAX_PROGRESS = " + progress);
                 return;
             }
 
@@ -322,7 +339,8 @@ public class ProgressBarLayoutView extends View {
 
             performBeginningAnimation();
         } else {
-            if (DEBUG_LOGGING) Log.w(TAG, "setProgress progress already called for same value! = " + progress);
+            if (DEBUG_LOGGING)
+                Log.w(TAG, "setProgress progress already called for same value! = " + progress);
         }
     }
 
@@ -447,7 +465,8 @@ public class ProgressBarLayoutView extends View {
                 publishProgress(starting_progress);
 
                 try {
-                    if (DEBUG_LOGGING) Log.d(TAG, "ProgressUpdateTask doInBackground sleep = " + mSleepTime);
+                    if (DEBUG_LOGGING)
+                        Log.d(TAG, "ProgressUpdateTask doInBackground sleep = " + mSleepTime);
                     Thread.sleep(mSleepTime);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
