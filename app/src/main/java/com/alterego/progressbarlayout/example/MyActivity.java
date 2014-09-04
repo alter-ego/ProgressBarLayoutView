@@ -1,5 +1,6 @@
 package com.alterego.progressbarlayout.example;
 
+import android.graphics.Typeface;
 import android.os.Bundle;
 
 import android.support.v7.app.ActionBarActivity;
@@ -25,6 +26,7 @@ public class MyActivity extends ActionBarActivity {
         mCircleProgressView = (ProgressBarLayoutView) findViewById(R.id.expanded_circle_progress);
         mCircleProgressView.setBeginningCrossAnimationView(mBeginningTextView);
         mCircleProgressView.setEndingCrossAnimationView(mEndingTextView);
+        mCircleProgressView.setTypeface(Typeface.createFromAsset(getAssets(), "Roboto-Bold.ttf"));
 
         mCircleProgressView.setOnClickListener(new View.OnClickListener() {
             @Override

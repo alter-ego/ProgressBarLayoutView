@@ -36,6 +36,8 @@ In case you don't want to set custom transition animations, it will look like in
 
 *(example soon to come)*
 
+You can also setup a custom font for the progress text with simple `setTypeface(Typeface tf)` method.
+
 ## COMPATIBILITY
 
 Android 2.3 (API 9) and up.

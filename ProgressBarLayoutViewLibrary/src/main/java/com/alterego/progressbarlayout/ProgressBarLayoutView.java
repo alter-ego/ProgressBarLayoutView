@@ -55,6 +55,7 @@ public class ProgressBarLayoutView extends View {
     private String mTextProgressString;
     private boolean mSizeChanged = false;
     private int mFutureProgress = 0;
+    private Typeface mTypeface;
 
     private class Circle {
         float radius;
@@ -190,14 +191,11 @@ public class ProgressBarLayoutView extends View {
      * @param font Typeface
      */
     public void setTypeface(Typeface font) {
-        //TODO setTypeface
-        //super.setTypeface(font);
-//        mTypeface = font;
-//        // This text size has been pre-scaled by the getDimensionPixelOffset method
-//        if (mTextPaint != null)
-//            mTextPaint.setTypeface(font);
-//        requestLayout();
-//        invalidate();
+        mTypeface = font;
+        if (mTextPaint != null)
+            mTextPaint.setTypeface(font);
+        requestLayout();
+        invalidate();
     }
 
     public void setCurrentProgress(int progress) {
