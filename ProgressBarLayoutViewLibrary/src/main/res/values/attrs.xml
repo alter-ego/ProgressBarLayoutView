@@ -6,6 +6,7 @@
         <attr name="progressCircleColor" format="color" />
         <attr name="textProgressSize" format="dimension" />
         <attr name="textProgressString" format="string" />
+        <attr name="stepDurationInMs" format="integer" />
         <attr name="beginningProgressAnimation" format="reference" />
         <attr name="beginningInverseProgressAnimation" format="reference" />
         <attr name="beginningProgressAnimationDurationInMs" format="integer" />

@@ -16,6 +16,7 @@ This widget is configured mainly through XML layout file. Here are the basic con
     <attr name="textProgressColor" format="color" />
     <attr name="textProgressSize" format="dimension" />
     <attr name="textProgressString" format="string" />
+	<attr name="stepDurationInMs" format="integer" />
 
 This is the basic widget setup - if you want to use it to also control the beginning view and ending view animation, you will need to set the beginning and ending views through code, like this for example:
 

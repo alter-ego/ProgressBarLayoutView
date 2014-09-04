@@ -33,13 +33,12 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
 //TODO TEST add padding to calculations
-//TODO add custom fonts
-//TODO add custom step duration setting
 
 public class ProgressBarLayoutView extends View {
 
     private static final String TAG = "ProgressBarLayoutView";
     private static final int ANIMATION_DURATION_IN_MS = 1000;
+    private static final int STEP_DURATION_IN_MS = 10;
     private final static int MAX_PROGRESS = 100;
     private static final boolean DEBUG_LOGGING = true;
 
@@ -73,8 +72,8 @@ public class ProgressBarLayoutView extends View {
     private Circle mProgressCircle;
     private TextPaint mTextPaint;
     private String mCurrentProgressString = "0%";
-    private static int mSleepTime = 8;
-    private static float mIncreaseStep = 4;
+    private static int mSleepTime;
+    private static float mIncreaseStep;
     private ProgressUpdateTask mUpdateTask;
     private float mBeginningProgressSize;
     private int mProgressCircleColor;
@@ -132,6 +131,7 @@ public class ProgressBarLayoutView extends View {
                     0xff000000);
             mTextProgressString = a.getString(
                     R.styleable.ProgressBarLayoutView_textProgressString);
+            mSleepTime = a.getInteger(R.styleable.ProgressBarLayoutView_stepDurationInMs, STEP_DURATION_IN_MS);
 
 
             //beginning animation resources
@@ -248,7 +248,7 @@ public class ProgressBarLayoutView extends View {
         if (DEBUG_LOGGING) Log.i(TAG, "mCenterX = " + mCenterX + ", mCenterY = " + mCenterY);
         int half_diagonal = (int) Math.sqrt((double) mWidth * mWidth + mHeight * mHeight) / 2;
         mIncreaseStep = (half_diagonal - mBeginningProgressSize) / 100;
-        mSleepTime = (int) (mIncreaseStep * 1500 / half_diagonal);
+        //mSleepTime = (int) (mIncreaseStep * 1500 / half_diagonal);
         if (DEBUG_LOGGING)
             Log.i(TAG, "mIncreaseStep = " + mIncreaseStep + ", mSleepTime = " + mSleepTime);
     }
