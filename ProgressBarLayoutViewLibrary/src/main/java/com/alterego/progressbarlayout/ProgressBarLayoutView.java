@@ -32,15 +32,13 @@ import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
-//TODO TEST add padding to calculations
-
 public class ProgressBarLayoutView extends View {
 
     private static final String TAG = "ProgressBarLayoutView";
     private static final int ANIMATION_DURATION_IN_MS = 1000;
     private static final int STEP_DURATION_IN_MS = 10;
     private final static int MAX_PROGRESS = 100;
-    private static final boolean DEBUG_LOGGING = true;
+    private static final boolean DEBUG_LOGGING = false;
 
     private Layout.Alignment mAlignmentHorizontal = Layout.Alignment.ALIGN_NORMAL;
     private static final float mSpacingMult = 1.0f;
@@ -56,18 +54,6 @@ public class ProgressBarLayoutView extends View {
     private int mFutureProgress = 0;
     private Typeface mTypeface;
 
-    private class Circle {
-        float radius;
-        float centerX;
-        float centerY;
-
-        Circle(float x, float y, float innerCircleSize) {
-            this.radius = innerCircleSize;
-            this.centerX = x;
-            this.centerY = y;
-        }
-    }
-
     private Paint mProgressCirclePaint;
     private Circle mProgressCircle;
     private TextPaint mTextPaint;
@@ -82,7 +68,6 @@ public class ProgressBarLayoutView extends View {
 
     private StaticLayout mTextToPrint;
     private ProgressBarLayoutView instance;
-
 
     private View mBeginningCrossAnimationView;
     private Animation mBeginningProgressAnimation;
@@ -186,9 +171,9 @@ public class ProgressBarLayoutView extends View {
     }
 
     /**
-     * Sets the text typeface for this label
+     * Sets the text typeface for the progress bar label
      *
-     * @param font Typeface
+     * @param font typeface for the label
      */
     public void setTypeface(Typeface font) {
         mTypeface = font;
@@ -198,13 +183,9 @@ public class ProgressBarLayoutView extends View {
         invalidate();
     }
 
-    public void setCurrentProgress(int progress) {
-        if (DEBUG_LOGGING) Log.v(TAG, "setCurrentProgress progress = " + progress);
-        mCurrentProgress = progress;
-
-        if (mCurrentProgress == MAX_PROGRESS)
-            performEndingAnimation();
-    }
+    /**
+     * Resets the progress bar to 0
+     */
 
     public void reset() {
         setCurrentProgress(0);
@@ -213,6 +194,126 @@ public class ProgressBarLayoutView extends View {
         mBeginningAnimationPerformed = false;
         mEndingAnimationPerformed = false;
         invalidate();
+    }
+
+    /**
+     * Sets the beginning progress size (i.e. the size of the circle for progress = 0
+     *
+     * @param size size of the beginning progress circle
+     */
+    public void setBeginningProgressSize(int size) {
+        mBeginningProgressSize = size;
+        int half_diagonal = (int) Math.sqrt((double) mWidth * mWidth + mHeight * mHeight) / 2;
+        mIncreaseStep = (half_diagonal - mBeginningProgressSize) / 100;
+    }
+
+    /**
+     * Sets color of the progress text
+     *
+     * @param color color of the progress text
+     */
+    public void setProgressTextColor(int color) {
+        mTextProgressColor = color;
+    }
+
+    /**
+     * Sets color of the progress bar circle
+     *
+     * @param color color of the progress bar circle
+     */
+    public void setProgresColor(int color) {
+        mProgressCircleColor = color;
+    }
+
+    /**
+     * Sets size of the progress bar text
+     *
+     * @param size size of the progress bar text
+     */
+    public void setTextProgressSize(int size) {
+        mTextSize = size;
+    }
+
+    /**
+     * Gets the progress bar maximum value (fixed at 100)
+     *
+     * @return maximum value of progress
+     */
+    public int getMaxProgress() {
+        return MAX_PROGRESS;
+    }
+
+    /**
+     * Sets the view that is visible before the progress bar. On this view will the
+     * "beginningInverseProgressAnimation" animation be executed while at the same time the
+     * "beginningProgressAnimation" is being executed on the progress bar view.
+     *
+     * At the beginning of the animations, the progress bar's visibility is set to {@link View#VISIBLE}, and
+     * at the end of the animations, the beginning view's visibility will be set to {@link View#GONE}.
+     *
+     * @param view view visible before the progress bar starts
+     */
+    public void setBeginningCrossAnimationView(View view) {
+        mBeginningCrossAnimationView = view;
+    }
+
+    /**
+     * Sets the view that is visible after the progress bar. On this view will the
+     * "endingInverseProgressAnimation" animation be executed while at the same time the
+     * "endingProgressAnimation" is being executed on the progress bar view.
+     *
+     * At the beginning of the animations, the ending view's visibility is set to {@link View#VISIBLE}, and
+     * at the end of the animations, the progress bar view's visibility will be set to {@link View#GONE}.
+     *
+     * @param view view visible after the progress bar ends (arrives at maximum progress, currently 100)
+     */
+    public void setEndingCrossAnimationView(View view) {
+        mEndingCrossAnimationView = view;
+    }
+
+    /**
+     * Set the progress bar progress.
+     *
+     * @param progress progress to be set, between 0 and max progress (currently fixed at 100).
+     */
+    public void setProgress(int progress) {
+        mFutureProgress = progress;
+
+        if ((mCurrentProgress != mFutureProgress || mSizeChanged)) {
+            mSizeChanged = false;
+            int starting_progress = mCurrentProgress;
+
+            if (mUpdateTask != null) {
+                if (DEBUG_LOGGING) Log.w(TAG, "setProgress cancelling task");
+                mUpdateTask.cancel(true);
+            }
+            if (progress > MAX_PROGRESS) {
+                if (DEBUG_LOGGING)
+                    Log.i(TAG, "setProgress progress bigger than MAX_PROGRESS = " + progress);
+                return;
+            }
+
+            if (DEBUG_LOGGING) Log.d(TAG, "setProgress progress = " + mFutureProgress);
+            mUpdateTask = new ProgressUpdateTask(this);
+            mUpdateTask.execute(starting_progress, mFutureProgress);
+            performBeginningAnimation();
+        } else {
+            if (DEBUG_LOGGING)
+                Log.w(TAG, "setProgress progress already called for same value! = " + progress);
+        }
+    }
+
+    private void cancelUpdateTask() {
+        if (mUpdateTask != null)
+            mUpdateTask.cancel(true);
+    }
+
+    private void setCurrentProgress(int progress) {
+        if (DEBUG_LOGGING) Log.v(TAG, "setCurrentProgress progress = " + progress);
+        mCurrentProgress = progress;
+
+        if (mCurrentProgress == MAX_PROGRESS)
+            performEndingAnimation();
     }
 
     private void formatProgressString(int progress) {
@@ -251,95 +352,6 @@ public class ProgressBarLayoutView extends View {
         //mSleepTime = (int) (mIncreaseStep * 1500 / half_diagonal);
         if (DEBUG_LOGGING)
             Log.i(TAG, "mIncreaseStep = " + mIncreaseStep + ", mSleepTime = " + mSleepTime);
-    }
-
-    /**
-     * Set size of the inner circle
-     *
-     * @param size size of the inner circle
-     */
-    public void setBeginningProgressSize(int size) {
-        mBeginningProgressSize = size;
-        int half_diagonal = (int) Math.sqrt((double) mWidth * mWidth + mHeight * mHeight) / 2;
-        mIncreaseStep = (half_diagonal - mBeginningProgressSize) / 100;
-    }
-
-    /**
-     * Set color of the progress text
-     *
-     * @param color color of the progress text
-     */
-    public void setProgressTextColor(int color) {
-        mTextProgressColor = color;
-    }
-
-    /**
-     * Set color of circle of expanding progress
-     *
-     * @param color color of circle of expanding progress
-     */
-    public void setProgresColor(int color) {
-        mProgressCircleColor = color;
-    }
-
-    /**
-     * Set size of the progress text
-     *
-     * @param size size of the progress text
-     */
-    public void setTextProgressSize(int size) {
-        mTextSize = size;
-    }
-
-    /**
-     * get maximum value of progress
-     *
-     * @return maximum value of progress
-     */
-    public int getMaxProgress() {
-        return MAX_PROGRESS;
-    }
-
-    public void setBeginningCrossAnimationView(View view) {
-        mBeginningCrossAnimationView = view;
-    }
-
-    public void setEndingCrossAnimationView(View view) {
-        mEndingCrossAnimationView = view;
-    }
-
-    /**
-     * set current progress
-     *
-     * @param progress set progress from 0 to max progress(100)
-     */
-    public void setProgress(int progress) {
-        mFutureProgress = progress;
-
-        if ((mCurrentProgress != mFutureProgress || mSizeChanged)) { //&& (mHeight!=0 && mWidth!=0)
-            mSizeChanged = false;
-            int starting_progress = mCurrentProgress;
-            //mCurrentProgress = progress;
-
-            if (mUpdateTask != null) {
-                if (DEBUG_LOGGING) Log.w(TAG, "setProgress cancelling task");
-                mUpdateTask.cancel(true);
-            }
-            if (progress > MAX_PROGRESS) {
-                if (DEBUG_LOGGING)
-                    Log.i(TAG, "setProgress progress bigger than MAX_PROGRESS = " + progress);
-                return;
-            }
-
-            if (DEBUG_LOGGING) Log.d(TAG, "setProgress progress = " + mFutureProgress);
-            mUpdateTask = new ProgressUpdateTask(this);
-            mUpdateTask.execute(starting_progress, mFutureProgress);
-
-            performBeginningAnimation();
-        } else {
-            if (DEBUG_LOGGING)
-                Log.w(TAG, "setProgress progress already called for same value! = " + progress);
-        }
     }
 
     private void performBeginningAnimation() {
@@ -397,7 +409,7 @@ public class ProgressBarLayoutView extends View {
 
         if (mCurrentProgressString != null && mTextToPrint != null) {
             canvas.save();
-            canvas.translate(mCenterX - getPaddingLeft(), mCenterY - getPaddingTop() - mTextToPrint.getHeight() / 2); //TODO test
+            canvas.translate(mCenterX - getPaddingLeft(), mCenterY - getPaddingTop() - mTextToPrint.getHeight() / 2);
             mTextToPrint.draw(canvas);
             canvas.restore();
         }
@@ -442,7 +454,6 @@ public class ProgressBarLayoutView extends View {
                 return null;
             int starting_progress = params[0];
             int final_progress = params[1];
-            //int final_size = (int) (final_progress * mIncreaseStep + mBeginningProgressSize);
             if (final_progress >= 100)
                 final_progress = 100;
 
@@ -489,9 +500,18 @@ public class ProgressBarLayoutView extends View {
         }
     }
 
-    public void cancelUpdateTask() {
-        if (mUpdateTask != null)
-            mUpdateTask.cancel(true);
+    private class Circle {
+        float radius;
+        float centerX;
+        float centerY;
+
+        Circle(float x, float y, float innerCircleSize) {
+            this.radius = innerCircleSize;
+            this.centerX = x;
+            this.centerY = y;
+        }
     }
+
+
 
 }

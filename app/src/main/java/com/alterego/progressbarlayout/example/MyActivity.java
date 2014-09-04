@@ -40,7 +40,6 @@ public class MyActivity extends ActionBarActivity {
             public void onClick(View v) {
                 mEndingTextView.setVisibility(View.GONE);
                 mBeginningTextView.setVisibility(View.VISIBLE);
-                //mCircleProgressView.setProgress(30);
             }
         });
 
