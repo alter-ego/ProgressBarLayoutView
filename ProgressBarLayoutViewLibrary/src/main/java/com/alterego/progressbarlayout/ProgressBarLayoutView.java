@@ -37,12 +37,10 @@ public class ProgressBarLayoutView extends View {
     private static final String TAG = "ProgressBarLayoutView";
     private static final int ANIMATION_DURATION_IN_MS = 1000;
     private static final int STEP_DURATION_IN_MS = 10;
-    private final static int MAX_PROGRESS = 100;
     private static final boolean DEBUG_LOGGING = false;
 
-    private Layout.Alignment mAlignmentHorizontal = Layout.Alignment.ALIGN_NORMAL;
-    private static final float mSpacingMult = 1.0f;
-    private static final float mSpacingAdd = 0.0f;
+    private static final float TEXTPAINT_SPACING_MULT = 1.0f;
+    private static final float TEXTPAINT_SPACING_ADD = 0.0f;
 
     private int mWidth = 0;
     private int mHeight = 0;
@@ -57,7 +55,6 @@ public class ProgressBarLayoutView extends View {
     private Paint mProgressCirclePaint;
     private Circle mProgressCircle;
     private TextPaint mTextPaint;
-    private String mCurrentProgressString = "0%";
     private static int mSleepTime;
     private static float mIncreaseStep;
     private ProgressUpdateTask mUpdateTask;
@@ -65,8 +62,9 @@ public class ProgressBarLayoutView extends View {
     private int mProgressCircleColor;
     private int mTextProgressColor;
     private float mTextSize;
+    private int mProgressMax = 100;
 
-    private StaticLayout mTextToPrint;
+    private Layout mTextToPrint;
     private ProgressBarLayoutView instance;
 
     private View mBeginningCrossAnimationView;
@@ -78,6 +76,8 @@ public class ProgressBarLayoutView extends View {
     private Animation mEndingProgressAnimation;
     private Animation mEndingInverseProgressAnimation;
     private boolean mEndingAnimationPerformed = false;
+
+    private IProgressStringFormatter mProgressStringFormatter = new DefaultProgressStringFormatter();
 
     public ProgressBarLayoutView(final Context context) {
         super(context);
@@ -189,7 +189,7 @@ public class ProgressBarLayoutView extends View {
 
     public void reset() {
         setCurrentProgress(0);
-        formatProgressString(mCurrentProgress);
+        mTextToPrint = mProgressStringFormatter.formatProgressString(mCurrentProgress, mTextProgressString, mTextPaint, mWidth, getPaddingLeft(), getPaddingRight());
         mProgressCircle.radius = mBeginningProgressSize;
         mBeginningAnimationPerformed = false;
         mEndingAnimationPerformed = false;
@@ -203,8 +203,11 @@ public class ProgressBarLayoutView extends View {
      */
     public void setBeginningProgressSize(int size) {
         mBeginningProgressSize = size;
-        int half_diagonal = (int) Math.sqrt((double) mWidth * mWidth + mHeight * mHeight) / 2;
-        mIncreaseStep = (half_diagonal - mBeginningProgressSize) / 100;
+        mIncreaseStep = (getHalfDiagonal() - mBeginningProgressSize) / getMaxProgress();
+    }
+
+    private int getHalfDiagonal() {
+        return (int) Math.sqrt((double) mWidth * mWidth + mHeight * mHeight) / 2;
     }
 
     /**
@@ -235,19 +238,29 @@ public class ProgressBarLayoutView extends View {
     }
 
     /**
-     * Gets the progress bar maximum value (fixed at 100)
+     * Gets the progress bar maximum value (default is 100)
      *
      * @return maximum value of progress
      */
     public int getMaxProgress() {
-        return MAX_PROGRESS;
+        return mProgressMax;
+    }
+
+    /**
+     * Set the progress bar maximum.
+     *
+     * @param maxProgress maximum progress (default is 100)
+     */
+    public void setMaxProgress(int maxProgress) {
+        mProgressMax = maxProgress;
+        mIncreaseStep = (getHalfDiagonal() - mBeginningProgressSize) / getMaxProgress();
     }
 
     /**
      * Sets the view that is visible before the progress bar. On this view will the
      * "beginningInverseProgressAnimation" animation be executed while at the same time the
      * "beginningProgressAnimation" is being executed on the progress bar view.
-     *
+     * <p/>
      * At the beginning of the animations, the progress bar's visibility is set to {@link View#VISIBLE}, and
      * at the end of the animations, the beginning view's visibility will be set to {@link View#GONE}.
      *
@@ -261,7 +274,7 @@ public class ProgressBarLayoutView extends View {
      * Sets the view that is visible after the progress bar. On this view will the
      * "endingInverseProgressAnimation" animation be executed while at the same time the
      * "endingProgressAnimation" is being executed on the progress bar view.
-     *
+     * <p/>
      * At the beginning of the animations, the ending view's visibility is set to {@link View#VISIBLE}, and
      * at the end of the animations, the progress bar view's visibility will be set to {@link View#GONE}.
      *
@@ -271,12 +284,17 @@ public class ProgressBarLayoutView extends View {
         mEndingCrossAnimationView = view;
     }
 
+
+
     /**
      * Set the progress bar progress.
      *
-     * @param progress progress to be set, between 0 and max progress (currently fixed at 100).
+     * @param progress progress to be set, between 0 and max progress.
      */
     public void setProgress(int progress) {
+        if (progress > getMaxProgress())
+            progress = getMaxProgress();
+
         mFutureProgress = progress;
 
         if ((mCurrentProgress != mFutureProgress || mSizeChanged)) {
@@ -286,11 +304,6 @@ public class ProgressBarLayoutView extends View {
             if (mUpdateTask != null) {
                 if (DEBUG_LOGGING) Log.w(TAG, "setProgress cancelling task");
                 mUpdateTask.cancel(true);
-            }
-            if (progress > MAX_PROGRESS) {
-                if (DEBUG_LOGGING)
-                    Log.i(TAG, "setProgress progress bigger than MAX_PROGRESS = " + progress);
-                return;
             }
 
             if (DEBUG_LOGGING) Log.d(TAG, "setProgress progress = " + mFutureProgress);
@@ -312,25 +325,10 @@ public class ProgressBarLayoutView extends View {
         if (DEBUG_LOGGING) Log.v(TAG, "setCurrentProgress progress = " + progress);
         mCurrentProgress = progress;
 
-        if (mCurrentProgress == MAX_PROGRESS)
+        if (mCurrentProgress == mProgressMax)
             performEndingAnimation();
     }
 
-    private void formatProgressString(int progress) {
-        if (mTextProgressString != null) {
-            try {
-                mCurrentProgressString = String.format(mTextProgressString, progress);
-                if (DEBUG_LOGGING)
-                    Log.v(TAG, "formatProgressString mCurrentProgressString = " + mCurrentProgressString);
-                mTextToPrint = new StaticLayout(mCurrentProgressString, mTextPaint, Math.abs((mWidth - getPaddingLeft() - getPaddingRight())), mAlignmentHorizontal, mSpacingMult, mSpacingAdd, false);
-                if (DEBUG_LOGGING)
-                    Log.d(TAG, "formatProgressString height of static layout = " + mTextToPrint.getHeight() + ", width = " + mTextToPrint.getWidth());
-            } catch (Exception e) {
-                Log.e(TAG, "formatProgressString formatting error = " + e.toString());
-                mCurrentProgressString = null;
-            }
-        }
-    }
 
     private void setWidthHeightAndCenter() {
 
@@ -347,9 +345,7 @@ public class ProgressBarLayoutView extends View {
         mCenterX = mWidth / 2;
         mCenterY = mHeight / 2;
         if (DEBUG_LOGGING) Log.i(TAG, "mCenterX = " + mCenterX + ", mCenterY = " + mCenterY);
-        int half_diagonal = (int) Math.sqrt((double) mWidth * mWidth + mHeight * mHeight) / 2;
-        mIncreaseStep = (half_diagonal - mBeginningProgressSize) / 100;
-        //mSleepTime = (int) (mIncreaseStep * 1500 / half_diagonal);
+        mIncreaseStep = (getHalfDiagonal() - mBeginningProgressSize) / getMaxProgress();
         if (DEBUG_LOGGING)
             Log.i(TAG, "mIncreaseStep = " + mIncreaseStep + ", mSleepTime = " + mSleepTime);
     }
@@ -407,7 +403,7 @@ public class ProgressBarLayoutView extends View {
         canvas.drawCircle(mProgressCircle.centerX, mProgressCircle.centerY,
                 mProgressCircle.radius, mProgressCirclePaint);
 
-        if (mCurrentProgressString != null && mTextToPrint != null) {
+        if (mTextToPrint != null) {
             canvas.save();
             canvas.translate(mCenterX - getPaddingLeft(), mCenterY - getPaddingTop() - mTextToPrint.getHeight() / 2);
             mTextToPrint.draw(canvas);
@@ -454,8 +450,8 @@ public class ProgressBarLayoutView extends View {
                 return null;
             int starting_progress = params[0];
             int final_progress = params[1];
-            if (final_progress >= 100)
-                final_progress = 100;
+            if (final_progress >= getMaxProgress())
+                final_progress = getMaxProgress();
 
             boolean isIncreasing = starting_progress <= final_progress;
 
@@ -490,7 +486,7 @@ public class ProgressBarLayoutView extends View {
             int value = values[0];
             if (DEBUG_LOGGING) Log.d(TAG, "onProgressUpdate progress = " + value);
             mProgressBarLayoutView.setCurrentProgress(value);
-            formatProgressString(value);
+            mTextToPrint = mProgressStringFormatter.formatProgressString(value, mTextProgressString, mTextPaint, mWidth, getPaddingLeft(), getPaddingRight());
             invalidate();
         }
 
@@ -512,6 +508,62 @@ public class ProgressBarLayoutView extends View {
         }
     }
 
+    /**
+     * IProgressStringFormatterSet declares the interface for custom progress bar label text formatting.
+     */
+    public interface IProgressStringFormatter {
+        /**
+         * formatProgressString declares the interface for custom progress bar label text formatting.
+         *
+         * @param progress       progress
+         * @param progressString progress bar string declared in the layout (textProgressString parameter)
+         * @param textPaint      {@link android.text.TextPaint} that should be used to paint the text
+         * @param width          progress view width
+         * @param padding_left   progress view left padding
+         * @param padding_right  progress view right padding
+         * @return returns the {@link android.text.Layout} that will be used in {@link #onDraw(android.graphics.Canvas)}
+         * when drawing the ProgressBarLayoutView. The layout will be drawn in the center of the view.
+         */
+        public Layout formatProgressString(int progress, String progressString, TextPaint textPaint, int width, int padding_left, int padding_right);
 
+    }
+
+    /**
+     * Set the progress bar's string formatter. That way you can make custom progress bar text labels.
+     *
+     * @param progressStringFormatter progress string formatter {@link com.alterego.progressbarlayout.ProgressBarLayoutView.IProgressStringFormatter}
+     */
+    public void setProgressStringFormatter(IProgressStringFormatter progressStringFormatter) {
+        mProgressStringFormatter = progressStringFormatter;
+    }
+
+    private class DefaultProgressStringFormatter implements IProgressStringFormatter {
+
+        @Override
+        public Layout formatProgressString(int progress, String progressString, TextPaint textPaint, int width, int padding_left, int padding_right) {
+            if (progressString != null) {
+                try {
+                    String currentProgressString = String.format(progressString, progress);
+                    if (DEBUG_LOGGING)
+                        Log.v(TAG, "formatProgressString currentProgressString = " + currentProgressString);
+                    StaticLayout textToPrint = new StaticLayout(currentProgressString,
+                            textPaint,
+                            Math.abs((width - padding_left - padding_right)),
+                            Layout.Alignment.ALIGN_NORMAL,
+                            TEXTPAINT_SPACING_MULT,
+                            TEXTPAINT_SPACING_ADD,
+                            false);
+
+                    if (DEBUG_LOGGING)
+                        Log.d(TAG, "formatProgressString height of static layout = " + textToPrint.getHeight() + ", width = " + textToPrint.getWidth());
+                    return textToPrint;
+                } catch (Exception e) {
+                    Log.e(TAG, "formatProgressString formatting error = " + e.toString());
+                }
+            }
+
+            return null;
+        }
+    }
 
 }

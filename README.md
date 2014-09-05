@@ -35,9 +35,12 @@ In case you don't want to set custom transition animations, it will look like in
     <attr name="endingInverseProgressAnimation" format="reference" />
     <attr name="endingProgressAnimationDurationInMs" format="integer" />
 
-*(example soon to come)*
 
 You can also setup a custom font for the progress text with simple `setTypeface(Typeface tf)` method.
+
+The default maximum is 100, but you can change it using the `setMaxProgress (int progress)`. 
+
+Should you want to customize the progress text completely (beyond changing just the `textProgressString`), you can implement your own instance of the `IProgressStringFormatter` and set it in the view using `setProgressStringFormatter(IProgressStringFormatter progressStringFormatter)`. The inteface is very simple, it just has one method, `Layout formatProgressString(int progress, String progressString, TextPaint textPaint, int width, int padding_left, int padding_right)`. The default formatter just makes a new `StaticLayout` using these parameters, but it will draw any kind of `Layout` in the center of the view.  
 
 ## COMPATIBILITY
 
@@ -47,6 +50,13 @@ Android 2.3 (API 9) and up.
 
 None.
 
+## CONTRIBUTORS
+
+- Ivan Morgillo
+- Sasa Sekulic
+
 ## LICENSE
+
+Copyright (C) 2014 Alter Ego Srls.
 
 This library is licensed under [Apache License, Version 2.0](http://www.apache.org/licenses/LICENSE-2.0.html).
